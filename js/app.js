@@ -37,6 +37,9 @@ const App = (() => {
         sections:
             document.querySelectorAll(".app-section"),
 
+        pageTitle:
+            document.getElementById("page-title"),
+
         themeToggle:
             document.getElementById("theme-toggle"),
 
@@ -58,13 +61,25 @@ const App = (() => {
 
 
     /* =====================================================
+       PAGE TITLES
+    ====================================================== */
+
+    const pageTitles = {
+        clock: "Clock",
+        stopwatch: "Stopwatch",
+        timer: "Timer",
+        timezone: "World Time"
+    };
+
+
+    /* =====================================================
        NAVIGATION
     ====================================================== */
 
     function navigate(section) {
 
         if (!section) {
-            return;
+            section = "clock";
         }
 
 
@@ -73,12 +88,23 @@ const App = (() => {
 
 
         if (!target) {
-            return;
+            section = "clock";
         }
 
 
         currentSection =
             section;
+
+
+        /*
+         * Update page title.
+         */
+        if (elements.pageTitle) {
+
+            elements.pageTitle.textContent =
+                pageTitles[section] ||
+                "ChronoX";
+        }
 
 
         /*
@@ -91,17 +117,26 @@ const App = (() => {
                     navigationItem.dataset.section ===
                     section;
 
+
                 navigationItem.classList.toggle(
                     "active",
                     isActive
                 );
 
-                navigationItem.setAttribute(
-                    "aria-current",
-                    isActive
-                        ? "page"
-                        : "false"
-                );
+
+                if (isActive) {
+
+                    navigationItem.setAttribute(
+                        "aria-current",
+                        "page"
+                    );
+
+                } else {
+
+                    navigationItem.removeAttribute(
+                        "aria-current"
+                    );
+                }
             }
         );
 
@@ -115,10 +150,12 @@ const App = (() => {
                 const isActive =
                     appSection.id === section;
 
+
                 appSection.classList.toggle(
                     "active",
                     isActive
                 );
+
 
                 appSection.hidden =
                     !isActive;
@@ -129,15 +166,19 @@ const App = (() => {
         /*
          * Keep URL hash synchronized.
          */
+        const newHash =
+            `#${section}`;
+
+
         if (
             window.location.hash !==
-            `#${section}`
+            newHash
         ) {
 
             history.replaceState(
                 null,
                 "",
-                `#${section}`
+                newHash
             );
         }
     }
@@ -158,6 +199,7 @@ const App = (() => {
 
                         event.preventDefault();
 
+
                         navigate(
                             navigationItem.dataset.section
                         );
@@ -168,11 +210,11 @@ const App = (() => {
 
 
         /*
-         * Restore section from URL.
+         * Restore section from URL hash.
          */
         const hash =
             window.location.hash
-                .replace("#", "");
+                .replace(/^#/, "");
 
 
         if (
@@ -220,6 +262,15 @@ const App = (() => {
 
     function applyTheme(theme) {
 
+        if (
+            theme !== "light" &&
+            theme !== "dark"
+        ) {
+
+            theme = "light";
+        }
+
+
         document.documentElement.dataset.theme =
             theme;
 
@@ -246,7 +297,7 @@ const App = (() => {
             );
 
 
-            elements.themeToggle.innerHTML =
+            elements.themeToggle.textContent =
                 isDark
                     ? "☀"
                     : "☾";
@@ -267,17 +318,19 @@ const App = (() => {
             "light";
 
 
-        applyTheme(
+        const nextTheme =
             currentTheme === "dark"
                 ? "light"
-                : "dark"
-        );
+                : "dark";
+
+
+        applyTheme(nextTheme);
 
 
         showToast(
-            currentTheme === "dark"
-                ? "Light theme enabled."
-                : "Dark theme enabled."
+            nextTheme === "dark"
+                ? "Dark theme enabled."
+                : "Light theme enabled."
         );
     }
 
@@ -314,10 +367,17 @@ const App = (() => {
             "open"
         );
 
+
         elements.settingsPanel.setAttribute(
             "aria-hidden",
             "false"
         );
+
+
+        if (elements.settingsClose) {
+
+            elements.settingsClose.focus();
+        }
     }
 
 
@@ -331,6 +391,7 @@ const App = (() => {
         elements.settingsPanel.classList.remove(
             "open"
         );
+
 
         elements.settingsPanel.setAttribute(
             "aria-hidden",
@@ -360,7 +421,7 @@ const App = (() => {
 
 
         /*
-         * Close when clicking outside panel.
+         * Close when clicking overlay.
          */
         if (elements.settingsPanel) {
 
@@ -376,6 +437,18 @@ const App = (() => {
                         closeSettings();
                     }
                 }
+            );
+        }
+
+
+        /*
+         * Reset preferences.
+         */
+        if (elements.resetSettings) {
+
+            elements.resetSettings.addEventListener(
+                "click",
+                resetSettings
             );
         }
     }
@@ -398,7 +471,18 @@ const App = (() => {
         }
 
 
-        StorageManager.resetPreferences();
+        /*
+         * Clear saved preferences.
+         */
+        if (
+            typeof StorageManager !==
+            "undefined" &&
+            typeof StorageManager.resetPreferences ===
+            "function"
+        ) {
+
+            StorageManager.resetPreferences();
+        }
 
 
         /*
@@ -411,31 +495,49 @@ const App = (() => {
          * Restore clock preferences.
          */
         if (
-            typeof Clock !== "undefined"
+            typeof Clock !==
+            "undefined"
         ) {
 
-            Clock.setFormat("24");
+            if (
+                typeof Clock.setFormat ===
+                "function"
+            ) {
 
-            Clock.setShowSeconds(true);
+                Clock.setFormat("24");
+            }
+
+
+            if (
+                typeof Clock.setShowSeconds ===
+                "function"
+            ) {
+
+                Clock.setShowSeconds(true);
+            }
         }
 
 
         /*
-         * Restore timezone list.
+         * Close settings.
          */
-        if (
-            typeof Timezone !== "undefined"
-        ) {
+        closeSettings();
+
+
+        /*
+         * Reload application so every component
+         * returns to its default state.
+         */
+        showToast(
+            "Preferences restored."
+        );
+
+
+        setTimeout(() => {
 
             window.location.reload();
 
-            return;
-        }
-
-
-        showToast(
-            "Settings restored."
-        );
+        }, 500);
     }
 
 
@@ -454,23 +556,42 @@ const App = (() => {
 
 
         /*
-         * Create container when HTML does not
-         * provide one.
+         * Use existing container when available.
          */
         let container =
             elements.toastContainer;
 
 
+        /*
+         * Create container if missing.
+         */
         if (!container) {
 
             container =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
+
 
             container.id =
                 "toast-container";
 
+
             container.className =
                 "toast-container";
+
+
+            container.setAttribute(
+                "aria-live",
+                "polite"
+            );
+
+
+            container.setAttribute(
+                "aria-atomic",
+                "true"
+            );
+
 
             document.body.appendChild(
                 container
@@ -478,16 +599,24 @@ const App = (() => {
         }
 
 
+        /*
+         * Create toast.
+         */
         const toast =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
+
 
         toast.className =
             "toast";
+
 
         toast.setAttribute(
             "role",
             "status"
         );
+
 
         toast.textContent =
             message;
@@ -521,7 +650,10 @@ const App = (() => {
 
             setTimeout(() => {
 
-                toast.remove();
+                if (toast.parentNode) {
+
+                    toast.remove();
+                }
 
             }, 250);
 
@@ -545,12 +677,9 @@ const App = (() => {
         const isTyping =
             activeElement &&
             (
-                activeElement.tagName ===
-                    "INPUT" ||
-                activeElement.tagName ===
-                    "TEXTAREA" ||
-                activeElement.tagName ===
-                    "SELECT" ||
+                activeElement.tagName === "INPUT" ||
+                activeElement.tagName === "TEXTAREA" ||
+                activeElement.tagName === "SELECT" ||
                 activeElement.isContentEditable
             );
 
@@ -572,26 +701,36 @@ const App = (() => {
 
 
             if (
-                currentSection ===
-                "stopwatch" &&
+                currentSection === "stopwatch" &&
                 typeof Stopwatch !== "undefined"
             ) {
 
-                Stopwatch.isRunning()
-                    ? Stopwatch.pause()
-                    : Stopwatch.start();
+                if (
+                    typeof Stopwatch.isRunning ===
+                    "function"
+                ) {
+
+                    Stopwatch.isRunning()
+                        ? Stopwatch.pause()
+                        : Stopwatch.start();
+                }
             }
 
 
             if (
-                currentSection ===
-                "timer" &&
+                currentSection === "timer" &&
                 typeof Timer !== "undefined"
             ) {
 
-                Timer.isRunning()
-                    ? Timer.pause()
-                    : Timer.start();
+                if (
+                    typeof Timer.isRunning ===
+                    "function"
+                ) {
+
+                    Timer.isRunning()
+                        ? Timer.pause()
+                        : Timer.start();
+                }
             }
         }
 
@@ -601,14 +740,13 @@ const App = (() => {
          * Reset active tool.
          */
         if (
-            event.key.toLowerCase() ===
-            "r"
+            event.key.toLowerCase() === "r"
         ) {
 
             if (
-                currentSection ===
-                "stopwatch" &&
-                typeof Stopwatch !== "undefined"
+                currentSection === "stopwatch" &&
+                typeof Stopwatch !== "undefined" &&
+                typeof Stopwatch.reset === "function"
             ) {
 
                 Stopwatch.reset();
@@ -616,9 +754,9 @@ const App = (() => {
 
 
             if (
-                currentSection ===
-                "timer" &&
-                typeof Timer !== "undefined"
+                currentSection === "timer" &&
+                typeof Timer !== "undefined" &&
+                typeof Timer.reset === "function"
             ) {
 
                 Timer.reset();
@@ -631,14 +769,13 @@ const App = (() => {
          * Record stopwatch lap.
          */
         if (
-            event.key.toLowerCase() ===
-            "l"
+            event.key.toLowerCase() === "l"
         ) {
 
             if (
-                currentSection ===
-                "stopwatch" &&
-                typeof Stopwatch !== "undefined"
+                currentSection === "stopwatch" &&
+                typeof Stopwatch !== "undefined" &&
+                typeof Stopwatch.recordLap === "function"
             ) {
 
                 Stopwatch.recordLap();
@@ -651,8 +788,7 @@ const App = (() => {
          * Toggle theme.
          */
         if (
-            event.key.toLowerCase() ===
-            "t"
+            event.key.toLowerCase() === "t"
         ) {
 
             toggleTheme();
@@ -664,8 +800,7 @@ const App = (() => {
          * Close settings.
          */
         if (
-            event.key ===
-            "Escape"
+            event.key === "Escape"
         ) {
 
             closeSettings();
@@ -697,7 +832,8 @@ const App = (() => {
 
                 const hash =
                     window.location.hash
-                        .replace("#", "");
+                        .replace(/^#/, "");
+
 
                 navigate(
                     hash || "clock"
@@ -707,48 +843,62 @@ const App = (() => {
 
 
         /*
-         * Update theme if the system theme
-         * changes and the user has not explicitly
-         * chosen one.
+         * Handle system theme changes.
          */
-        window
-            .matchMedia(
+        const mediaQuery =
+            window.matchMedia(
                 "(prefers-color-scheme: dark)"
-            )
-            .addEventListener(
-                "change",
-                event => {
-
-                    const stored =
-                        StorageManager.get(
-                            "theme"
-                        );
-
-
-                    if (!stored) {
-
-                        applyTheme(
-                            event.matches
-                                ? "dark"
-                                : "light"
-                        );
-                    }
-                }
             );
+
+
+        mediaQuery.addEventListener(
+            "change",
+            event => {
+
+                const storedTheme =
+                    StorageManager.get(
+                        "theme"
+                    );
+
+
+                /*
+                 * Only follow system theme when
+                 * the user has not selected one.
+                 */
+                if (!storedTheme) {
+
+                    applyTheme(
+                        event.matches
+                            ? "dark"
+                            : "light"
+                    );
+                }
+            }
+        );
     }
 
 
     /* =====================================================
-       INITIALIZE COMPONENTS
+       COMPONENT INITIALIZATION
     ====================================================== */
 
     function initializeComponents() {
 
         /*
-         * Components initialize themselves through
-         * DOMContentLoaded. This controller only
-         * verifies that they are available.
+         * Components initialize themselves.
+         * This controller only checks availability.
          */
+
+        if (
+            typeof StorageManager ===
+            "undefined"
+        ) {
+
+            console.warn(
+                "[ChronoX] StorageManager module unavailable."
+            );
+        }
+
 
         if (
             typeof Clock ===
@@ -813,6 +963,7 @@ const App = (() => {
 
         initializeComponents();
 
+
         console.info(
             "[ChronoX] Application initialized."
         );
@@ -830,6 +981,7 @@ const App = (() => {
         navigate,
 
         openSettings,
+
         closeSettings,
 
         toggleTheme,
