@@ -1,53 +1,26 @@
 /**
  * =========================================================
  * ChronoX
- * Timezone Engine
+ * Timezone Manager
  * =========================================================
  *
  * Responsibilities:
- * - World clock updates
+ * - World Time management
  * - Timezone conversion
- * - Timezone formatting
- * - Dynamic timezone cards
- * - Add / remove saved zones
- * - DST-aware timezone calculations
+ * - Timezone catalog
+ * - Add / remove World Time zones
+ * - Persistent timezone storage
+ * - DST-aware timezone conversion
+ * - UTC offset display
  *
  * =========================================================
  */
 
-const Timezone = (() => {
+const TimezoneManager = (() => {
 
     /* =====================================================
-       STATE
-    ====================================================== */
-
-    let savedZones = [
-        {
-            city: "Kathmandu",
-            country: "Nepal",
-            zone: "Asia/Kathmandu"
-        },
-        {
-            city: "London",
-            country: "United Kingdom",
-            zone: "Europe/London"
-        },
-        {
-            city: "Tokyo",
-            country: "Japan",
-            zone: "Asia/Tokyo"
-        },
-        {
-            city: "New York",
-            country: "United States",
-            zone: "America/New_York"
-        }
-    ];
-
-
-    /* =====================================================
-       TIMEZONE DATA
-    ====================================================== */
+       TIMEZONE CATALOG
+    ===================================================== */
 
     const timezoneCatalog = [
         {
@@ -56,29 +29,49 @@ const Timezone = (() => {
             zone: "Asia/Kathmandu"
         },
         {
-            city: "London",
-            country: "United Kingdom",
-            zone: "Europe/London"
-        },
-        {
-            city: "Paris",
-            country: "France",
-            zone: "Europe/Paris"
-        },
-        {
-            city: "Dubai",
-            country: "United Arab Emirates",
-            zone: "Asia/Dubai"
-        },
-        {
-            city: "Mumbai",
+            city: "New Delhi",
             country: "India",
             zone: "Asia/Kolkata"
+        },
+        {
+            city: "Dhaka",
+            country: "Bangladesh",
+            zone: "Asia/Dhaka"
+        },
+        {
+            city: "Colombo",
+            country: "Sri Lanka",
+            zone: "Asia/Colombo"
+        },
+        {
+            city: "Bangkok",
+            country: "Thailand",
+            zone: "Asia/Bangkok"
         },
         {
             city: "Singapore",
             country: "Singapore",
             zone: "Asia/Singapore"
+        },
+        {
+            city: "Kuala Lumpur",
+            country: "Malaysia",
+            zone: "Asia/Kuala_Lumpur"
+        },
+        {
+            city: "Jakarta",
+            country: "Indonesia",
+            zone: "Asia/Jakarta"
+        },
+        {
+            city: "Hong Kong",
+            country: "Hong Kong",
+            zone: "Asia/Hong_Kong"
+        },
+        {
+            city: "Shanghai",
+            country: "China",
+            zone: "Asia/Shanghai"
         },
         {
             city: "Tokyo",
@@ -91,9 +84,99 @@ const Timezone = (() => {
             zone: "Asia/Seoul"
         },
         {
+            city: "Dubai",
+            country: "United Arab Emirates",
+            zone: "Asia/Dubai"
+        },
+        {
+            city: "Riyadh",
+            country: "Saudi Arabia",
+            zone: "Asia/Riyadh"
+        },
+        {
+            city: "Doha",
+            country: "Qatar",
+            zone: "Asia/Qatar"
+        },
+        {
+            city: "Istanbul",
+            country: "Türkiye",
+            zone: "Europe/Istanbul"
+        },
+        {
+            city: "Moscow",
+            country: "Russia",
+            zone: "Europe/Moscow"
+        },
+        {
+            city: "London",
+            country: "United Kingdom",
+            zone: "Europe/London"
+        },
+        {
+            city: "Paris",
+            country: "France",
+            zone: "Europe/Paris"
+        },
+        {
+            city: "Berlin",
+            country: "Germany",
+            zone: "Europe/Berlin"
+        },
+        {
+            city: "Rome",
+            country: "Italy",
+            zone: "Europe/Rome"
+        },
+        {
+            city: "Madrid",
+            country: "Spain",
+            zone: "Europe/Madrid"
+        },
+        {
+            city: "Amsterdam",
+            country: "Netherlands",
+            zone: "Europe/Amsterdam"
+        },
+        {
+            city: "Zurich",
+            country: "Switzerland",
+            zone: "Europe/Zurich"
+        },
+        {
+            city: "Cairo",
+            country: "Egypt",
+            zone: "Africa/Cairo"
+        },
+        {
+            city: "Johannesburg",
+            country: "South Africa",
+            zone: "Africa/Johannesburg"
+        },
+        {
+            city: "Nairobi",
+            country: "Kenya",
+            zone: "Africa/Nairobi"
+        },
+        {
+            city: "Lagos",
+            country: "Nigeria",
+            zone: "Africa/Lagos"
+        },
+        {
             city: "Sydney",
             country: "Australia",
             zone: "Australia/Sydney"
+        },
+        {
+            city: "Melbourne",
+            country: "Australia",
+            zone: "Australia/Melbourne"
+        },
+        {
+            city: "Perth",
+            country: "Australia",
+            zone: "Australia/Perth"
         },
         {
             city: "Auckland",
@@ -101,14 +184,14 @@ const Timezone = (() => {
             zone: "Pacific/Auckland"
         },
         {
-            city: "New York",
+            city: "Honolulu",
             country: "United States",
-            zone: "America/New_York"
+            zone: "Pacific/Honolulu"
         },
         {
-            city: "Chicago",
+            city: "Los Angeles",
             country: "United States",
-            zone: "America/Chicago"
+            zone: "America/Los_Angeles"
         },
         {
             city: "Denver",
@@ -116,9 +199,14 @@ const Timezone = (() => {
             zone: "America/Denver"
         },
         {
-            city: "Los Angeles",
+            city: "Chicago",
             country: "United States",
-            zone: "America/Los_Angeles"
+            zone: "America/Chicago"
+        },
+        {
+            city: "New York",
+            country: "United States",
+            zone: "America/New_York"
         },
         {
             city: "Toronto",
@@ -141,21 +229,29 @@ const Timezone = (() => {
             zone: "America/Sao_Paulo"
         },
         {
-            city: "Cairo",
-            country: "Egypt",
-            zone: "Africa/Cairo"
-        },
-        {
-            city: "Johannesburg",
-            country: "South Africa",
-            zone: "Africa/Johannesburg"
+            city: "Buenos Aires",
+            country: "Argentina",
+            zone: "America/Argentina/Buenos_Aires"
         }
     ];
 
 
     /* =====================================================
+       DEFAULT WORLD TIME ZONES
+    ===================================================== */
+
+    const defaultZones = [
+        "Asia/Kathmandu",
+        "Asia/Kolkata",
+        "Asia/Tokyo",
+        "Europe/London",
+        "America/New_York"
+    ];
+
+
+    /* =====================================================
        DOM ELEMENTS
-    ====================================================== */
+    ===================================================== */
 
     const elements = {
         timezoneGrid:
@@ -164,169 +260,302 @@ const Timezone = (() => {
         addTimezone:
             document.getElementById("add-timezone"),
 
+        timezonePicker:
+            document.getElementById("timezone-picker"),
+
+        sourceZone:
+            document.getElementById("source-timezone"),
+
+        targetZone:
+            document.getElementById("target-timezone"),
+
+        sourceDate:
+            document.getElementById("source-date"),
+
         sourceTime:
             document.getElementById("source-time"),
 
-        sourceZone:
-            document.getElementById("source-zone"),
-
-        targetZone:
-            document.getElementById("target-zone"),
-
-        convertedTime:
-            document.getElementById("converted-time")
+        result:
+            document.getElementById("conversion-result")
     };
 
 
     /* =====================================================
-       TIME FORMAT
-    ====================================================== */
+       STATE
+    ===================================================== */
 
-    function getTimeOptions(timezone) {
-
-        const options = {
-            timeZone: timezone,
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: getHour12Preference()
-        };
-
-        return options;
-    }
-
-
-    function getHour12Preference() {
-
-        const format =
-            typeof StorageManager !== "undefined"
-                ? StorageManager.get("timeFormat")
-                : null;
-
-        return format === "12";
-    }
+    let savedZones = [];
 
 
     /* =====================================================
-       FORMAT WORLD TIME
-    ====================================================== */
+       STORAGE
+    ===================================================== */
 
-    function formatTime(date, timezone) {
+    const STORAGE_KEY =
+        "chronox-world-timezones";
+
+
+    function loadZones() {
 
         try {
 
-            return new Intl.DateTimeFormat(
-                undefined,
-                getTimeOptions(timezone)
-            ).format(date);
+            const stored =
+                localStorage.getItem(STORAGE_KEY);
 
-        } catch {
+            if (!stored) {
 
-            return "--:--";
+                savedZones =
+                    [...defaultZones];
+
+                saveZones();
+
+                return;
+            }
+
+
+            const parsed =
+                JSON.parse(stored);
+
+
+            if (
+                Array.isArray(parsed) &&
+                parsed.length > 0
+            ) {
+
+                savedZones =
+                    parsed.filter(zone =>
+                        typeof zone === "string" &&
+                        timezoneCatalog.some(
+                            item =>
+                                item.zone === zone
+                        )
+                    );
+
+            } else {
+
+                savedZones =
+                    [...defaultZones];
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "ChronoX: Unable to load timezone settings.",
+                error
+            );
+
+            savedZones =
+                [...defaultZones];
+        }
+    }
+
+
+    function saveZones() {
+
+        try {
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(savedZones)
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "ChronoX: Unable to save timezone settings.",
+                error
+            );
         }
     }
 
 
     /* =====================================================
-       FORMAT WORLD DATE
-    ====================================================== */
+       TIMEZONE LOOKUP
+    ===================================================== */
 
-    function formatDate(date, timezone) {
+    function getTimezone(zone) {
 
-        try {
-
-            return new Intl.DateTimeFormat(
-                undefined,
-                {
-                    timeZone: timezone,
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric"
-                }
-            ).format(date);
-
-        } catch {
-
-            return "---";
-        }
+        return timezoneCatalog.find(
+            timezone =>
+                timezone.zone === zone
+        );
     }
 
 
     /* =====================================================
-       GET UTC OFFSET
-    ====================================================== */
+       UTC OFFSET
+    ===================================================== */
 
-    function getOffset(date, timezone) {
+    function getTimezoneOffsetMinutes(
+        date,
+        timezone
+    ) {
 
         try {
 
-            const parts =
+            const formatter =
                 new Intl.DateTimeFormat(
                     "en-US",
                     {
                         timeZone: timezone,
                         timeZoneName: "longOffset"
                     }
-                ).formatToParts(date);
-
-            const zonePart =
-                parts.find(
-                    part =>
-                        part.type === "timeZoneName"
                 );
 
-            if (!zonePart) {
-                return "UTC";
-            }
-
-            return zonePart.value
-                .replace("GMT", "UTC");
-
-        } catch {
-
-            return "UTC";
-        }
-    }
-
-
-    /* =====================================================
-       GET ZONE LABEL
-    ====================================================== */
-
-    function getZoneLabel(zone) {
-
-        try {
 
             const parts =
-                new Intl.DateTimeFormat(
-                    "en-US",
-                    {
-                        timeZone: zone,
-                        timeZoneName: "long"
-                    }
-                ).formatToParts(
-                    new Date()
-                );
+                formatter.formatToParts(date);
 
-            const zonePart =
+
+            const offsetPart =
                 parts.find(
                     part =>
                         part.type === "timeZoneName"
                 );
 
-            return zonePart
-                ? zonePart.value
-                : zone;
 
-        } catch {
+            if (!offsetPart) {
+                return null;
+            }
 
-            return zone;
+
+            const value =
+                offsetPart.value;
+
+
+            if (value === "GMT") {
+                return 0;
+            }
+
+
+            const match =
+                value.match(
+                    /GMT([+-])(\d{2}):?(\d{2})?/
+                );
+
+
+            if (!match) {
+                return null;
+            }
+
+
+            const sign =
+                match[1] === "+"
+                    ? 1
+                    : -1;
+
+
+            const hours =
+                Number(match[2]);
+
+
+            const minutes =
+                Number(match[3] || 0);
+
+
+            return sign *
+                (
+                    hours * 60 +
+                    minutes
+                );
+
+        } catch (error) {
+
+            console.warn(
+                "ChronoX: Unable to determine timezone offset.",
+                error
+            );
+
+            return null;
         }
     }
 
 
+    function getOffset(
+        date,
+        timezone
+    ) {
+
+        const minutes =
+            getTimezoneOffsetMinutes(
+                date,
+                timezone
+            );
+
+
+        if (minutes === null) {
+            return "UTC";
+        }
+
+
+        const sign =
+            minutes >= 0
+                ? "+"
+                : "-";
+
+
+        const absolute =
+            Math.abs(minutes);
+
+
+        const hours =
+            Math.floor(
+                absolute / 60
+            );
+
+
+        const mins =
+            absolute % 60;
+
+
+        return `UTC${sign}${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+    }
+
+
     /* =====================================================
-       RENDER WORLD CLOCKS
-    ====================================================== */
+       FORMAT WORLD TIME
+    ===================================================== */
+
+    function formatTime(
+        date,
+        timezone
+    ) {
+
+        return new Intl.DateTimeFormat(
+            "en-US",
+            {
+                timeZone: timezone,
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            }
+        ).format(date);
+    }
+
+
+    function formatDate(
+        date,
+        timezone
+    ) {
+
+        return new Intl.DateTimeFormat(
+            "en-US",
+            {
+                timeZone: timezone,
+                weekday: "short",
+                month: "short",
+                day: "2-digit",
+                year: "numeric"
+            }
+        ).format(date);
+    }
+
+
+    /* =====================================================
+       WORLD CLOCK RENDERING
+    ===================================================== */
 
     function renderWorldClocks() {
 
@@ -334,193 +563,127 @@ const Timezone = (() => {
             return;
         }
 
-        const now = new Date();
 
         elements.timezoneGrid.innerHTML = "";
 
-        savedZones.forEach(
-            (timezone, index) => {
 
-                const card =
-                    document.createElement("article");
-
-                card.className =
-                    "timezone-card";
-
-                card.dataset.zone =
-                    timezone.zone;
+        const now =
+            new Date();
 
 
-                card.innerHTML = `
-                    <div class="timezone-info">
+        savedZones.forEach(zone => {
 
-                        <span class="timezone-city">
+            const timezone =
+                getTimezone(zone);
+
+
+            if (!timezone) {
+                return;
+            }
+
+
+            const card =
+                document.createElement("article");
+
+            card.className =
+                "timezone-card";
+
+
+            card.dataset.timezone =
+                timezone.zone;
+
+
+            card.innerHTML = `
+                <div class="timezone-card-header">
+
+                    <div>
+                        <h3>
                             ${escapeHTML(timezone.city)}
-                        </span>
+                        </h3>
 
-                        <span class="timezone-location">
+                        <span>
                             ${escapeHTML(timezone.country)}
                         </span>
-
                     </div>
 
-                    <div class="timezone-time">
+                    <button
+                        class="timezone-remove"
+                        type="button"
+                        data-zone="${escapeHTML(timezone.zone)}"
+                        aria-label="Remove ${escapeHTML(timezone.city)}"
+                    >
+                        ×
+                    </button>
 
-                        <span class="world-time">
-                            ${formatTime(
-                                now,
-                                timezone.zone
-                            )}
-                        </span>
+                </div>
 
-                        <span class="world-date">
-                            ${formatDate(
-                                now,
-                                timezone.zone
-                            )}
-                        </span>
+                <div class="timezone-clock">
+                    ${formatTime(now, timezone.zone)}
+                </div>
 
-                    </div>
+                <div class="timezone-date">
+                    ${formatDate(now, timezone.zone)}
+                </div>
 
-                    <div class="timezone-footer">
-
-                        <span class="timezone-offset">
-                            ${getOffset(
-                                now,
-                                timezone.zone
-                            )}
-                        </span>
-
-                        <button
-                            class="timezone-remove"
-                            type="button"
-                            data-index="${index}"
-                            aria-label="Remove ${
-                                escapeHTML(timezone.city)
-                            }"
-                            title="Remove timezone">
-                            ×
-                        </button>
-
-                    </div>
-                `;
+                <div class="timezone-offset">
+                    ${getOffset(now, timezone.zone)}
+                </div>
+            `;
 
 
-                elements.timezoneGrid.appendChild(
-                    card
+            const removeButton =
+                card.querySelector(
+                    ".timezone-remove"
+                );
+
+
+            if (removeButton) {
+
+                removeButton.addEventListener(
+                    "click",
+                    () => {
+
+                        removeTimezone(
+                            timezone.zone
+                        );
+
+                    }
                 );
             }
-        );
 
 
-        bindRemoveButtons();
-    }
-
-
-    /* =====================================================
-       UPDATE WORLD CLOCKS
-    ====================================================== */
-
-    function updateWorldClocks() {
-
-        if (!elements.timezoneGrid) {
-            return;
-        }
-
-        const now = new Date();
-
-        const cards =
-            elements.timezoneGrid.querySelectorAll(
-                ".timezone-card"
+            elements.timezoneGrid.appendChild(
+                card
             );
-
-
-        cards.forEach(
-            (card, index) => {
-
-                const timezone =
-                    savedZones[index];
-
-                if (!timezone) {
-                    return;
-                }
-
-
-                const timeElement =
-                    card.querySelector(
-                        ".world-time"
-                    );
-
-                const dateElement =
-                    card.querySelector(
-                        ".world-date"
-                    );
-
-                const offsetElement =
-                    card.querySelector(
-                        ".timezone-offset"
-                    );
-
-
-                if (timeElement) {
-
-                    timeElement.textContent =
-                        formatTime(
-                            now,
-                            timezone.zone
-                        );
-                }
-
-
-                if (dateElement) {
-
-                    dateElement.textContent =
-                        formatDate(
-                            now,
-                            timezone.zone
-                        );
-                }
-
-
-                if (offsetElement) {
-
-                    offsetElement.textContent =
-                        getOffset(
-                            now,
-                            timezone.zone
-                        );
-                }
-            }
-        );
+        });
     }
 
 
     /* =====================================================
        ADD TIMEZONE
-    ====================================================== */
+    ===================================================== */
 
     function addTimezone(zone) {
 
         const timezone =
-            timezoneCatalog.find(
-                item =>
-                    item.zone === zone
-            );
+            getTimezone(zone);
 
 
         if (!timezone) {
+
+            showMessage(
+                "Timezone not found."
+            );
+
             return false;
         }
 
 
-        const alreadyExists =
-            savedZones.some(
-                item =>
-                    item.zone === timezone.zone
-            );
-
-
-        if (alreadyExists) {
+        if (
+            savedZones.includes(
+                timezone.zone
+            )
+        ) {
 
             showMessage(
                 `${timezone.city} is already added.`
@@ -530,20 +693,24 @@ const Timezone = (() => {
         }
 
 
-        savedZones.push({
-            city: timezone.city,
-            country: timezone.country,
-            zone: timezone.zone
-        });
+        savedZones.push(
+            timezone.zone
+        );
 
 
         saveZones();
 
         renderWorldClocks();
 
+        populateTimezonePicker();
+
+        populateTimezoneSelects();
+
+
         showMessage(
             `${timezone.city} added.`
         );
+
 
         return true;
     }
@@ -551,97 +718,128 @@ const Timezone = (() => {
 
     /* =====================================================
        REMOVE TIMEZONE
-    ====================================================== */
+    ===================================================== */
 
-    function removeTimezone(index) {
+    function removeTimezone(zone) {
 
-        if (
-            index < 0 ||
-            index >= savedZones.length
-        ) {
+        const timezone =
+            getTimezone(zone);
+
+
+        if (!timezone) {
             return;
         }
 
 
-        const removed =
-            savedZones[index];
-
-
-        /*
-         * Keep at least one timezone.
-         */
-        if (savedZones.length <= 1) {
-
-            showMessage(
-                "At least one timezone must remain."
+        savedZones =
+            savedZones.filter(
+                savedZone =>
+                    savedZone !== zone
             );
-
-            return;
-        }
-
-
-        savedZones.splice(
-            index,
-            1
-        );
 
 
         saveZones();
 
         renderWorldClocks();
 
+        populateTimezonePicker();
+
+        populateTimezoneSelects();
+
+
         showMessage(
-            `${removed.city} removed.`
+            `${timezone.city} removed.`
         );
     }
 
 
     /* =====================================================
-       REMOVE BUTTONS
-    ====================================================== */
+       WORLD TIMEZONE PICKER
+    ===================================================== */
 
-    function bindRemoveButtons() {
+    function populateTimezonePicker() {
 
-        const buttons =
-            document.querySelectorAll(
-                ".timezone-remove"
-            );
-
-
-        buttons.forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const index =
-                        Number(
-                            button.dataset.index
-                        );
-
-                    removeTimezone(index);
-                }
-            );
-
-        });
-    }
-
-
-    /* =====================================================
-       TIMEZONE SELECT OPTIONS
-    ====================================================== */
-
-    function populateTimezoneSelects() {
-
-        if (!elements.sourceZone ||
-            !elements.targetZone) {
-
+        if (!elements.timezonePicker) {
             return;
         }
 
 
-        const zones =
-            timezoneCatalog;
+        elements.timezonePicker.innerHTML = "";
+
+
+        const placeholder =
+            document.createElement("option");
+
+
+        placeholder.value =
+            "";
+
+
+        placeholder.textContent =
+            "Select timezone...";
+
+
+        elements.timezonePicker.appendChild(
+            placeholder
+        );
+
+
+        timezoneCatalog.forEach(
+            timezone => {
+
+                const alreadyAdded =
+                    savedZones.includes(
+                        timezone.zone
+                    );
+
+
+                if (alreadyAdded) {
+                    return;
+                }
+
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    timezone.zone;
+
+
+                option.textContent =
+                    `${timezone.city} — ${timezone.country}`;
+
+
+                elements.timezonePicker.appendChild(
+                    option
+                );
+            }
+        );
+    }
+
+
+    /* =====================================================
+       CONVERTER SELECT OPTIONS
+    ===================================================== */
+
+    function populateTimezoneSelects() {
+
+        if (
+            !elements.sourceZone ||
+            !elements.targetZone
+        ) {
+            return;
+        }
+
+
+        const currentSource =
+            elements.sourceZone.value;
+
+
+        const currentTarget =
+            elements.targetZone.value;
 
 
         elements.sourceZone.innerHTML = "";
@@ -649,178 +847,151 @@ const Timezone = (() => {
         elements.targetZone.innerHTML = "";
 
 
-        zones.forEach(timezone => {
+        timezoneCatalog.forEach(
+            timezone => {
 
-            const label =
-                `${timezone.city} — ${timezone.country}`;
-
-
-            const sourceOption =
-                document.createElement("option");
-
-            sourceOption.value =
-                timezone.zone;
-
-            sourceOption.textContent =
-                label;
+                const offset =
+                    getOffset(
+                        new Date(),
+                        timezone.zone
+                    );
 
 
-            const targetOption =
-                document.createElement("option");
-
-            targetOption.value =
-                timezone.zone;
-
-            targetOption.textContent =
-                label;
+                const label =
+                    `${timezone.city} — ${timezone.country} (${offset})`;
 
 
-            elements.sourceZone.appendChild(
-                sourceOption
+                const sourceOption =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                sourceOption.value =
+                    timezone.zone;
+
+
+                sourceOption.textContent =
+                    label;
+
+
+                const targetOption =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                targetOption.value =
+                    timezone.zone;
+
+
+                targetOption.textContent =
+                    label;
+
+
+                elements.sourceZone.appendChild(
+                    sourceOption
+                );
+
+
+                elements.targetZone.appendChild(
+                    targetOption
+                );
+            }
+        );
+
+
+        if (
+            currentSource &&
+            timezoneCatalog.some(
+                timezone =>
+                    timezone.zone === currentSource
+            )
+        ) {
+
+            elements.sourceZone.value =
+                currentSource;
+
+        } else {
+
+            elements.sourceZone.value =
+                "Asia/Kathmandu";
+        }
+
+
+        if (
+            currentTarget &&
+            timezoneCatalog.some(
+                timezone =>
+                    timezone.zone === currentTarget
+            )
+        ) {
+
+            elements.targetZone.value =
+                currentTarget;
+
+        } else {
+
+            elements.targetZone.value =
+                "Asia/Kolkata";
+        }
+    }
+
+
+    /* =====================================================
+       LOCAL DATE/TIME PARTS
+    ===================================================== */
+
+    function getDateTimeParts(
+        date,
+        timezone
+    ) {
+
+        const formatter =
+            new Intl.DateTimeFormat(
+                "en-US",
+                {
+                    timeZone: timezone,
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hourCycle: "h23"
+                }
             );
 
-            elements.targetZone.appendChild(
-                targetOption
-            );
+
+        const parts =
+            formatter.formatToParts(date);
+
+
+        const values = {};
+
+
+        parts.forEach(part => {
+
+            if (part.type !== "literal") {
+                values[part.type] =
+                    Number(part.value);
+            }
+
         });
 
 
-        /*
-         * Sensible defaults.
-         */
-        elements.sourceZone.value =
-            "Asia/Kathmandu";
-
-        elements.targetZone.value =
-            "Asia/Tokyo";
-    }
-
-
-    /* =====================================================
-       TIMEZONE CONVERSION
-    ====================================================== */
-
-    function convertTime() {
-
-        if (
-            !elements.sourceTime ||
-            !elements.sourceZone ||
-            !elements.targetZone ||
-            !elements.convertedTime
-        ) {
-            return;
-        }
-
-
-        const input =
-            elements.sourceTime.value;
-
-
-        if (!input) {
-
-            elements.convertedTime.textContent =
-                "—";
-
-            return;
-        }
-
-
-        const sourceZone =
-            elements.sourceZone.value;
-
-        const targetZone =
-            elements.targetZone.value;
-
-
-        /*
-         * Parse the entered local date/time.
-         */
-        const dateParts =
-            parseDateTimeInput(input);
-
-
-        if (!dateParts) {
-
-            elements.convertedTime.textContent =
-                "Invalid date";
-
-            return;
-        }
-
-
-        /*
-         * Convert source-local time to UTC.
-         */
-        const utcDate =
-            zonedTimeToUTC(
-                dateParts,
-                sourceZone
-            );
-
-
-        if (!utcDate) {
-
-            elements.convertedTime.textContent =
-                "Unable to convert";
-
-            return;
-        }
-
-
-        /*
-         * Format UTC instant in target timezone.
-         */
-        const converted =
-            new Intl.DateTimeFormat(
-                undefined,
-                {
-                    timeZone: targetZone,
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: getHour12Preference()
-                }
-            ).format(utcDate);
-
-
-        elements.convertedTime.textContent =
-            converted;
-    }
-
-
-    /* =====================================================
-       PARSE DATETIME-LOCAL
-    ====================================================== */
-
-    function parseDateTimeInput(value) {
-
-        const match =
-            value.match(
-                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
-            );
-
-
-        if (!match) {
-            return null;
-        }
-
-
         return {
-            year: Number(match[1]),
-            month: Number(match[2]),
-            day: Number(match[3]),
-            hour: Number(match[4]),
-            minute: Number(match[5])
+            year: values.year,
+            month: values.month,
+            day: values.day,
+            hour: values.hour,
+            minute: values.minute
         };
     }
 
 
     /* =====================================================
-       ZONED TIME → UTC
-    ====================================================== */
+       ZONED LOCAL TIME → UTC
+    ===================================================== */
 
     function zonedTimeToUTC(
         parts,
@@ -828,7 +999,8 @@ const Timezone = (() => {
     ) {
 
         /*
-         * Initial UTC approximation.
+         * Interpret the entered local time as UTC
+         * temporarily.
          */
         let utc =
             Date.UTC(
@@ -841,24 +1013,51 @@ const Timezone = (() => {
 
 
         /*
-         * Determine timezone offset.
+         * Recalculate the timezone offset multiple
+         * times so DST transitions are handled more
+         * reliably.
          */
-        const offset =
-            getTimezoneOffsetMinutes(
-                new Date(utc),
-                timezone
-            );
+        for (
+            let attempt = 0;
+            attempt < 3;
+            attempt++
+        ) {
+
+            const date =
+                new Date(utc);
 
 
-        if (offset === null) {
-            return null;
+            const offset =
+                getTimezoneOffsetMinutes(
+                    date,
+                    timezone
+                );
+
+
+            if (offset === null) {
+                return null;
+            }
+
+
+            const corrected =
+                Date.UTC(
+                    parts.year,
+                    parts.month - 1,
+                    parts.day,
+                    parts.hour,
+                    parts.minute
+                ) -
+                offset * 60 * 1000;
+
+
+            if (corrected === utc) {
+                break;
+            }
+
+
+            utc =
+                corrected;
         }
-
-
-        /*
-         * Apply timezone offset.
-         */
-        utc -= offset * 60 * 1000;
 
 
         return new Date(utc);
@@ -866,240 +1065,341 @@ const Timezone = (() => {
 
 
     /* =====================================================
-       GET OFFSET IN MINUTES
-    ====================================================== */
+       CONVERT TIME
+    ===================================================== */
 
-    function getTimezoneOffsetMinutes(
-        date,
-        timezone
-    ) {
+    function convertTime() {
 
-        try {
-
-            const parts =
-                new Intl.DateTimeFormat(
-                    "en-US",
-                    {
-                        timeZone: timezone,
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                        hourCycle: "h23"
-                    }
-                ).formatToParts(date);
-
-
-            const values = {};
-
-
-            parts.forEach(part => {
-
-                if (part.type !== "literal") {
-
-                    values[part.type] =
-                        Number(part.value);
-                }
-            });
-
-
-            const asUTC =
-                Date.UTC(
-                    values.year,
-                    values.month - 1,
-                    values.day,
-                    values.hour,
-                    values.minute,
-                    values.second
-                );
-
-
-            return (
-                asUTC -
-                date.getTime()
-            ) / 60000;
-
-        } catch {
-
-            return null;
+        if (
+            !elements.sourceZone ||
+            !elements.targetZone ||
+            !elements.sourceDate ||
+            !elements.sourceTime ||
+            !elements.result
+        ) {
+            return;
         }
+
+
+        const sourceTimezone =
+            elements.sourceZone.value;
+
+
+        const targetTimezone =
+            elements.targetZone.value;
+
+
+        const dateValue =
+            elements.sourceDate.value;
+
+
+        const timeValue =
+            elements.sourceTime.value;
+
+
+        if (
+            !sourceTimezone ||
+            !targetTimezone ||
+            !dateValue ||
+            !timeValue
+        ) {
+
+            elements.result.textContent =
+                "Select a date, time, and timezone.";
+
+            return;
+        }
+
+
+        const [
+            year,
+            month,
+            day
+        ] =
+            dateValue
+                .split("-")
+                .map(Number);
+
+
+        const [
+            hour,
+            minute
+        ] =
+            timeValue
+                .split(":")
+                .map(Number);
+
+
+        const utcDate =
+            zonedTimeToUTC(
+                {
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute
+                },
+                sourceTimezone
+            );
+
+
+        if (!utcDate) {
+
+            elements.result.textContent =
+                "Unable to convert this time.";
+
+            return;
+        }
+
+
+        const converted =
+            new Intl.DateTimeFormat(
+                "en-US",
+                {
+                    timeZone: targetTimezone,
+                    weekday: "short",
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                }
+            ).format(utcDate);
+
+
+        const targetOffset =
+            getOffset(
+                utcDate,
+                targetTimezone
+            );
+
+
+        elements.result.innerHTML = `
+            <strong>
+                ${escapeHTML(converted)}
+            </strong>
+
+            <span>
+                ${escapeHTML(targetOffset)}
+            </span>
+        `;
     }
 
 
     /* =====================================================
-       ADD TIMEZONE DIALOG
-    ====================================================== */
+       SWAP TIMEZONES
+    ===================================================== */
+
+    function swapTimezones() {
+
+        if (
+            !elements.sourceZone ||
+            !elements.targetZone
+        ) {
+            return;
+        }
+
+
+        const source =
+            elements.sourceZone.value;
+
+
+        const target =
+            elements.targetZone.value;
+
+
+        elements.sourceZone.value =
+            target;
+
+
+        elements.targetZone.value =
+            source;
+
+
+        convertTime();
+    }
+
+
+    /* =====================================================
+       UPDATE WORLD CLOCKS
+    ===================================================== */
+
+    function updateWorldClocks() {
+
+        if (!elements.timezoneGrid) {
+            return;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const cards =
+            elements.timezoneGrid.querySelectorAll(
+                ".timezone-card"
+            );
+
+
+        cards.forEach(card => {
+
+            const zone =
+                card.dataset.timezone;
+
+
+            if (!zone) {
+                return;
+            }
+
+
+            const clock =
+                card.querySelector(
+                    ".timezone-clock"
+                );
+
+
+            const date =
+                card.querySelector(
+                    ".timezone-date"
+                );
+
+
+            const offset =
+                card.querySelector(
+                    ".timezone-offset"
+                );
+
+
+            if (clock) {
+
+                clock.textContent =
+                    formatTime(
+                        now,
+                        zone
+                    );
+            }
+
+
+            if (date) {
+
+                date.textContent =
+                    formatDate(
+                        now,
+                        zone
+                    );
+            }
+
+
+            if (offset) {
+
+                offset.textContent =
+                    getOffset(
+                        now,
+                        zone
+                    );
+            }
+        });
+    }
+
+
+    /* =====================================================
+       ADD TIMEZONE BUTTON
+    ===================================================== */
 
     function openTimezonePicker() {
 
-        const available =
-            timezoneCatalog.filter(
-                timezone =>
-                    !savedZones.some(
-                        saved =>
-                            saved.zone === timezone.zone
-                    )
-            );
+        if (!elements.timezonePicker) {
+            return;
+        }
 
 
-        if (available.length === 0) {
+        const zone =
+            elements.timezonePicker.value;
+
+
+        if (!zone) {
 
             showMessage(
-                "All available timezones are already added."
+                "Select a timezone first."
             );
 
             return;
         }
 
 
-        const options =
-            available
-                .map(
-                    (timezone, index) =>
-                        `${index + 1}. ${timezone.city} — ${timezone.country}`
-                )
-                .join("\n");
+        if (addTimezone(zone)) {
 
-
-        const answer =
-            window.prompt(
-                `Add a timezone:\n\n${options}\n\nEnter the number:`
-            );
-
-
-        if (answer === null) {
-            return;
-        }
-
-
-        const index =
-            Number(answer) - 1;
-
-
-        if (
-            !Number.isInteger(index) ||
-            !available[index]
-        ) {
-
-            showMessage(
-                "Invalid timezone selection."
-            );
-
-            return;
-        }
-
-
-        addTimezone(
-            available[index].zone
-        );
-    }
-
-
-    /* =====================================================
-       STORAGE
-    ====================================================== */
-
-    function saveZones() {
-
-        if (
-            typeof StorageManager !== "undefined" &&
-            StorageManager.save
-        ) {
-
-            StorageManager.save(
-                "timezones",
-                savedZones
-            );
-        }
-    }
-
-
-    function loadZones() {
-
-        if (
-            typeof StorageManager === "undefined" ||
-            !StorageManager.get
-        ) {
-            return;
-        }
-
-
-        const stored =
-            StorageManager.get(
-                "timezones"
-            );
-
-
-        if (
-            Array.isArray(stored) &&
-            stored.length > 0
-        ) {
-
-            const validZones =
-                stored.filter(
-                    zone =>
-                        zone &&
-                        typeof zone.city === "string" &&
-                        typeof zone.country === "string" &&
-                        typeof zone.zone === "string"
-                );
-
-
-            if (validZones.length > 0) {
-
-                savedZones =
-                    validZones;
-            }
+            elements.timezonePicker.value =
+                "";
         }
     }
 
 
     /* =====================================================
-       MESSAGE
-    ====================================================== */
+       MESSAGE / TOAST
+    ===================================================== */
 
     function showMessage(message) {
 
+        /*
+         * Use ChronoX's existing toast system when
+         * available.
+         */
         if (
-            typeof App !== "undefined" &&
-            typeof App.showToast === "function"
+            typeof window.showToast ===
+            "function"
         ) {
 
-            App.showToast(message);
+            window.showToast(
+                message
+            );
 
             return;
         }
 
 
-        /*
-         * Fallback for early development.
-         */
+        if (
+            typeof window.showMessage ===
+            "function" &&
+            window.showMessage !== showMessage
+        ) {
+
+            window.showMessage(
+                message
+            );
+
+            return;
+        }
+
+
         console.info(
-            `[ChronoX] ${message}`
+            `ChronoX: ${message}`
         );
     }
 
 
     /* =====================================================
        HTML ESCAPE
-    ====================================================== */
+    ===================================================== */
 
     function escapeHTML(value) {
 
-        return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+        const div =
+            document.createElement("div");
+
+
+        div.textContent =
+            String(value);
+
+
+        return div.innerHTML;
     }
 
 
     /* =====================================================
-       EVENTS
-    ====================================================== */
+       EVENT BINDING
+    ===================================================== */
 
     function bindEvents() {
 
@@ -1112,16 +1412,25 @@ const Timezone = (() => {
         }
 
 
-        if (elements.sourceTime) {
+        if (elements.timezonePicker) {
 
-            elements.sourceTime.addEventListener(
-                "input",
-                convertTime
-            );
-
-            elements.sourceTime.addEventListener(
+            elements.timezonePicker.addEventListener(
                 "change",
-                convertTime
+                event => {
+
+                    if (!event.target.value) {
+                        return;
+                    }
+
+
+                    addTimezone(
+                        event.target.value
+                    );
+
+
+                    event.target.value =
+                        "";
+                }
             );
         }
 
@@ -1142,16 +1451,55 @@ const Timezone = (() => {
                 convertTime
             );
         }
+
+
+        if (elements.sourceDate) {
+
+            elements.sourceDate.addEventListener(
+                "change",
+                convertTime
+            );
+        }
+
+
+        if (elements.sourceTime) {
+
+            elements.sourceTime.addEventListener(
+                "change",
+                convertTime
+            );
+        }
+
+
+        /*
+         * Support an existing swap button if your
+         * HTML already contains one.
+         */
+        const swapButton =
+            document.getElementById(
+                "swap-timezones"
+            );
+
+
+        if (swapButton) {
+
+            swapButton.addEventListener(
+                "click",
+                swapTimezones
+            );
+        }
     }
 
 
     /* =====================================================
        INITIALIZATION
-    ====================================================== */
+    ===================================================== */
 
     function init() {
 
         loadZones();
+
+        populateTimezonePicker();
 
         populateTimezoneSelects();
 
@@ -1163,164 +1511,53 @@ const Timezone = (() => {
 
 
         /*
-         * World clocks need only update once per minute,
-         * but updating every second keeps the interface
-         * synchronized with the main clock.
+         * Update World Time every second.
          */
         setInterval(
             updateWorldClocks,
             1000
+        );
+
+
+        /*
+         * Refresh converter offsets every minute
+         * so DST changes are reflected.
+         */
+        setInterval(
+            populateTimezoneSelects,
+            60 * 1000
         );
     }
 
 
     /* =====================================================
        PUBLIC API
-    ====================================================== */
+    ===================================================== */
 
     return {
-
         init,
-
         addTimezone,
         removeTimezone,
-
-        renderWorldClocks,
-        updateWorldClocks,
-
         convertTime,
-
-        getCatalog: () =>
-            [...timezoneCatalog],
-
-        getSavedZones: () =>
-            [...savedZones]
+        swapTimezones,
+        renderWorldClocks,
+        populateTimezonePicker,
+        populateTimezoneSelects,
+        getOffset
     };
 
 })();
 
 
 /* =========================================================
-   INITIALIZE
+   START CHRONOX TIMEZONE MANAGER
 ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        Timezone.init();
+        TimezoneManager.init();
 
     }
 );
-
-
-
-// TimeZoneX Core Configuration & State Management
-const timezoneCatalog = [
-  { label: 'UTC', zone: 'UTC' },
-  { label: 'Kathmandu (NST)', zone: 'Asia/Kathmandu' },
-  { label: 'New York (EST/EDT)', zone: 'America/New_York' },
-  { label: 'London (GMT/BST)', zone: 'Europe/London' },
-  { label: 'Tokyo (JST)', zone: 'Asia/Tokyo' },
-  { label: 'Sydney (AEST/AEDT)', zone: 'Australia/Sydney' }
-];
-
-let savedTimezones = JSON.parse(localStorage.getItem('timezonex_favorites')) || [
-  'UTC',
-  'Asia/Kathmandu',
-  'America/New_York'
-];
-
-// Core Time Utility Functions
-function formatTimeForZone(timeZone) {
-  const now = new Date();
-  
-  const timeFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
-
-  const dateFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  });
-
-  return {
-    timeStr: timeFormatter.format(now),
-    dateStr: dateFormatter.format(now)
-  };
-}
-
-// Render Engine
-function renderClocks() {
-  const container = document.getElementById('clock-container');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  savedTimezones.forEach(zone => {
-    const { timeStr, dateStr } = formatTimeForZone(zone);
-    const card = document.createElement('div');
-    card.className = 'clock-card';
-
-    card.innerHTML = `
-      <div class="clock-header">
-        <h3>${zone.replace('_', ' ')}</h3>
-        <button class="remove-btn" onclick="removeTimezone('${zone}')">&times;</button>
-      </div>
-      <div class="clock-time">${timeStr}</div>
-      <div class="clock-date">${dateStr}</div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-// Interactive State Actions
-function addTimezone(zone) {
-  if (!savedTimezones.includes(zone)) {
-    savedTimezones.push(zone);
-    saveAndRefresh();
-  }
-}
-
-function removeTimezone(zone) {
-  savedTimezones = savedTimezones.filter(z => z !== zone);
-  saveAndRefresh();
-}
-
-function saveAndRefresh() {
-  localStorage.setItem('timezonex_favorites', JSON.stringify(savedTimezones));
-  renderClocks();
-}
-
-// Modal / Interactive Prompt Helper
-function promptAddTimezone() {
-  const available = timezoneCatalog.filter(tz => !savedTimezones.includes(tz.zone));
-  if (available.length === 0) {
-    alert('All available timezones are already added!');
-    return;
-  }
-
-  const listOptions = available.map((tz, i) => `${i + 1}. ${tz.label}`).join('\n');
-  const choice = prompt(`Select a timezone to add:\n\n${listOptions}`);
-  
-  const index = parseInt(choice, 10) - 1;
-  if (!isNaN(index) && available[index]) {
-    addTimezone(available[index].zone);
-  }
-}
-
-// Real-Time Engine Initialization
-function initClockEngine() {
-  renderClocks();
-  // Sync render on every second boundary
-  setInterval(renderClocks, 1000);
-}
-
-document.addEventListener('DOMContentLoaded', initClockEngine);

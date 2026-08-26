@@ -1048,6 +1048,50 @@ a {
 
 
 /* =========================================================
+   TIMEZONE ADD CONTROL
+========================================================= */
+
+.timezone-add-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timezone-picker {
+    min-width: 220px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 11px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.timezone-picker:hover {
+    border-color: var(--color-border-strong);
+}
+
+.timezone-picker:focus {
+    border-color: var(--color-accent);
+    outline: none;
+}
+
+@media (max-width: 720px) {
+    .timezone-add-control {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .timezone-picker {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
    15. TIMEZONE GRID
 ========================================================= */
 
