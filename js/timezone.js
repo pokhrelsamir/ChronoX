@@ -1212,3 +1212,115 @@ document.addEventListener(
 
     }
 );
+
+
+
+// TimeZoneX Core Configuration & State Management
+const timezoneCatalog = [
+  { label: 'UTC', zone: 'UTC' },
+  { label: 'Kathmandu (NST)', zone: 'Asia/Kathmandu' },
+  { label: 'New York (EST/EDT)', zone: 'America/New_York' },
+  { label: 'London (GMT/BST)', zone: 'Europe/London' },
+  { label: 'Tokyo (JST)', zone: 'Asia/Tokyo' },
+  { label: 'Sydney (AEST/AEDT)', zone: 'Australia/Sydney' }
+];
+
+let savedTimezones = JSON.parse(localStorage.getItem('timezonex_favorites')) || [
+  'UTC',
+  'Asia/Kathmandu',
+  'America/New_York'
+];
+
+// Core Time Utility Functions
+function formatTimeForZone(timeZone) {
+  const now = new Date();
+  
+  const timeFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+
+  const dateFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  return {
+    timeStr: timeFormatter.format(now),
+    dateStr: dateFormatter.format(now)
+  };
+}
+
+// Render Engine
+function renderClocks() {
+  const container = document.getElementById('clock-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  savedTimezones.forEach(zone => {
+    const { timeStr, dateStr } = formatTimeForZone(zone);
+    const card = document.createElement('div');
+    card.className = 'clock-card';
+
+    card.innerHTML = `
+      <div class="clock-header">
+        <h3>${zone.replace('_', ' ')}</h3>
+        <button class="remove-btn" onclick="removeTimezone('${zone}')">&times;</button>
+      </div>
+      <div class="clock-time">${timeStr}</div>
+      <div class="clock-date">${dateStr}</div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// Interactive State Actions
+function addTimezone(zone) {
+  if (!savedTimezones.includes(zone)) {
+    savedTimezones.push(zone);
+    saveAndRefresh();
+  }
+}
+
+function removeTimezone(zone) {
+  savedTimezones = savedTimezones.filter(z => z !== zone);
+  saveAndRefresh();
+}
+
+function saveAndRefresh() {
+  localStorage.setItem('timezonex_favorites', JSON.stringify(savedTimezones));
+  renderClocks();
+}
+
+// Modal / Interactive Prompt Helper
+function promptAddTimezone() {
+  const available = timezoneCatalog.filter(tz => !savedTimezones.includes(tz.zone));
+  if (available.length === 0) {
+    alert('All available timezones are already added!');
+    return;
+  }
+
+  const listOptions = available.map((tz, i) => `${i + 1}. ${tz.label}`).join('\n');
+  const choice = prompt(`Select a timezone to add:\n\n${listOptions}`);
+  
+  const index = parseInt(choice, 10) - 1;
+  if (!isNaN(index) && available[index]) {
+    addTimezone(available[index].zone);
+  }
+}
+
+// Real-Time Engine Initialization
+function initClockEngine() {
+  renderClocks();
+  // Sync render on every second boundary
+  setInterval(renderClocks, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', initClockEngine);
